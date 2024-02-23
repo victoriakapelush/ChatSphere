@@ -1,0 +1,19 @@
+{
+  "name": "chatsphere",
+  "version": "1.0.0",
+  "description": "Messaging app that allows multiple users message each other.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/victoriakapelush/ChatSphere.git"
+  },
+  "author": "Victoria Kapelush",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/victoriakapelush/ChatSphere/issues"
+  },
+  "homepage": "https://github.com/victoriakapelush/ChatSphere#readme"
+}
