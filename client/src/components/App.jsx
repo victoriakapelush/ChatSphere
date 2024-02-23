@@ -1,5 +1,5 @@
 import '../styles/index.css';
-import Auth from './Auth';
+import Auth from './Auth.jsx';
 
 function App() {
 
