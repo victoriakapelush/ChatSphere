@@ -154,4 +154,32 @@ footer a {
 
 .users-list {
   border-right: 1px solid var(--dark);
+  padding-right: 1rem;
+  width: 20rem;
+  margin: 1rem 1rem;
+}
+
+.user-icon {
+  width: 3rem;
+}
+
+.username-header {
+  align-items: center;
+  gap: 1rem;
+}
+
+.username-header h4 {
+  margin: 0;
+  padding: 0;
+}
+
+.user-brief-left {
+  border: 1px solid var(--dark);
+  border-radius: 10px;
+  padding: 1rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.user-brief-left h4, .user-brief-left p {
+  margin: 0;
 }
