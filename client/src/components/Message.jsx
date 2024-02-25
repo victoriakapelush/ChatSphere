@@ -115,7 +115,7 @@ function Message() {
                 </div>
                 <form className="send-message-form">
                 <div className="flex-row input-btn-form-container">
-                    <input></input>
+                    <input type="text" placeholder="Type your message here..."></input>
                     <button>Send</button>
                 </div>
             </form>
