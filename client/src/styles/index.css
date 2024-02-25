@@ -167,15 +167,24 @@ footer a {
 
 .username-header {
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   border-bottom: 1px solid var(--dark);
   padding-bottom: 1rem;
   width: 100%;
 }
 
+.user-img-name {
+  gap: 1rem;
+}
+
 .username-header h4 {
   margin: 0;
   padding: 0;
+}
+
+.logout-form {
+  width: 10rem;
 }
 
 .user-brief-left {

@@ -1,4 +1,21 @@
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
 function Message() {
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+          const response = await axios.get('http://localhost:3000');
+          const { token } = response.data;
+          localStorage.removeItem('token', token);
+          navigate('/');
+        } catch (error) {
+          console.error('Logout error:', error);
+        }
+      };
+
     return (
         <div className="auth-container auth-container-extra">
             <div className="users-list">
@@ -57,11 +74,14 @@ function Message() {
             </div>
             <div className="message-section flex-column">
                 <div className="flex-row username-header">
-                    <img className="user-icon" src="../src/assets/icons/woman.png"></img>
-                    <div className="flex-column">
-                        <h4>Jessica Simpson</h4>
-                        <h4>Online</h4>
+                    <div className="flex-row user-img-name">
+                        <img className="user-icon" src="../src/assets/icons/woman.png"></img>
+                        <div className="flex-column">
+                            <h4>Jessica Simpson</h4>
+                            <h4>Online</h4>
+                        </div>
                     </div>
+                    <button onClick={handleSubmit} type="submit" className="login-btn">Log out</button>
                 </div>
                 <div className="flex-column messages-container">
                     <div className="message-window flex-column">
