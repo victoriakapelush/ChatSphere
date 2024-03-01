@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+/* eslint-disable no-unused-vars */
+import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
 import axios from "axios";
@@ -9,16 +10,18 @@ function Message() {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState("");
     const [currentUser, setCurrentUser] = useState(null);
+    const { id } = useParams();
 
-// Function to decode JWT token and set current user
+/*Function to decode JWT token and set current user
 const setCurrentUserFromToken = () => {
     const token = localStorage.getItem('token');
     if (token) {
         const decoded = jwtDecode(token);
         setCurrentUser(decoded.username); 
     }
-};
+};*/
 
+    // Log out
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -40,13 +43,13 @@ const setCurrentUserFromToken = () => {
                     return;
                 }
                 const tokenWithoutBearer = token.replace('Bearer ', '');
-                const response = await axios.get("http://localhost:3000/message", {
+                const response = await axios.get(`http://localhost:3000/message`, {
                     headers: {
                         Authorization: `Bearer ${tokenWithoutBearer}`,
                     },
                 });
                 setMessages(response.data);
-                setCurrentUserFromToken(); 
+                //setCurrentUserFromToken(); 
             } catch (error) {
                 console.error("Error fetching messages:", error);
             }
@@ -88,8 +91,8 @@ const setCurrentUserFromToken = () => {
                     <button className="groupchat-btn">Filter by groupchat</button>
                 </div>
                 {messages.map((message, index) => (
-                <Link key={index} to={`message/:id`}><div className="flex-column user-brief-left">
-                    <h4>{message.user.username}</h4>
+                <Link key={index} to={`/message/${id}`}><div className="flex-column user-brief-left">
+                    <h4>{}</h4>
                     <p>{message.text}</p>
                 </div></Link>
                 ))}
@@ -110,7 +113,7 @@ const setCurrentUserFromToken = () => {
                     <div key={index} className="message-window flex-column">
                         <p className="p-message">{message.text}</p>
                         <p className="p-sent-by">{message.time}</p>
-                        <p className="p-sent-by">by {message.user.username || "by Anonymous"}</p>
+                        <p className="p-sent-by">by {  "by Anonymous"}</p>
                     </div>
                     ))}
                 </div>

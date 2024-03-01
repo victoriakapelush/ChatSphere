@@ -21,8 +21,9 @@ function getRelativeTime(date) {
   }
 
   const messageGet = (req, res) => {
-    Message.find()
-      .populate('user')
+    const currentUser = req.user;
+    Message.find({ receiver: req.params.id })
+      .populate('sender')
       .then(messages => {
         if (messages.length === 0) {
           return res.status(404).json({ message: 'No messages found' });
@@ -30,20 +31,33 @@ function getRelativeTime(date) {
         const formattedMessages = messages.map(message => ({
           text: message.text,
           time: getRelativeTime(message.time),
-          user: message.user
+          sender: currentUser,
+          receiver: req.params.id
         }));
         res.json(formattedMessages);
       })
       .catch(err => res.status(500).json({ error: 'Error fetching messages' }));
   };
-  
 
   const messagePost = async (req, res) => {
     try {
       const currentUser = await User.findById(req.user.id);
       const { text } = req.body;
-      const message = new Message({ text, user: currentUser });
+      const receiver = req.params.id;
+      const message = new Message({ receiver, text, user: currentUser });
       await message.save();
+
+      currentUser.messagesToOtherUsers.push(message);
+      await currentUser.save();
+
+      const receiverUser = await User.findById(receiver);
+      if (!receiverUser) {
+        return res.status(404).json({ message: "Receiver not found" });
+      }
+
+      receiverUser.messagesFromOtherUsers.push(message);
+      await receiverUser.save();
+
       res.status(201).json({ message: "Message created successfully" })
     } catch (error) {
       console.error(error);

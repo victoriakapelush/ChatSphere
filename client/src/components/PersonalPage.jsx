@@ -1,85 +1,90 @@
 /* eslint-disable no-unused-vars */
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { Link } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode'
 
 function PersonalPage() {
     const navigate = useNavigate();
     const [messages, setMessages] = useState([]);
-    const [inputValue, setInputValue] = useState("");
-    const [currentUser, setCurrentUser] = useState(null);
+    const [clickedUser, setClickedUser] = useState(null);
+    const { id } = useParams();
+    const [newMessage, setNewMessage] = useState("");
 
-// Function to decode JWT token and set current user
-const setCurrentUserFromToken = () => {
-  const token = localStorage.getItem('token');
-  if (token) {
-      const decoded = jwtDecode(token);
-      setCurrentUser(decoded.username); 
-  }
-};
-
-  const handleSubmit = async (e) => {
-      e.preventDefault();
-      try {
-        const response = await axios.get('http://localhost:3000');
-        const { token } = response.data;
-        localStorage.removeItem('token', token);
-        navigate('/');
-      } catch (error) {
-        console.error('Logout error:', error);
-      }
+    const handleClick = (user) => {
+      setClickedUser(user);
     };
 
-    useEffect(() => {
-      const fetchMessagesAndSetCurrentUser = async () => {
-          try {
-              const token = localStorage.getItem('token');
-              if (!token) {
-                  navigate('/');
-                  return;
-              }
-              const tokenWithoutBearer = token.replace('Bearer ', '');
-              const response = await axios.get("http://localhost:3000/message", {
-                  headers: {
-                      Authorization: `Bearer ${tokenWithoutBearer}`,
-                  },
-              });
-              setMessages(response.data);
-              setCurrentUserFromToken(); 
-          } catch (error) {
-              console.error("Error fetching messages:", error);
-          }
-      };
-      fetchMessagesAndSetCurrentUser(); 
-  }, []);   
+    // Display all mesagges
+    const fetchMessage = async () => {
+        try {
+            const response = await axios.get(`http://localhost:3000/message/${id}`);
+            setNewMessage(response.data);
+        }
+        catch (error) {
+            console.error("Error fetching message:", error);
+        }
+    }
 
-    const handleSubmitMessage = async (e) => {
-      e.preventDefault(); 
-      try {
-          const token = localStorage.getItem('token');
-          if (!token) {
-            navigate('/');
-            return;
-          }
-          const tokenWithoutBearer = token.replace('Bearer ', '');
-          const response = await axios.post(
-              "http://localhost:3000/message",
-              { text: inputValue }, 
-              {
-                  headers: {
-                      Authorization: `Bearer ${tokenWithoutBearer}`,
-                  }
-              }
-          );
-          const { message } = response.data;
-          console.log("Message created:", message);
-          setInputValue("");
-      } catch (error) {
-          console.error("Error sending message:", error);
-      }
-  };
-    
+    // Send a message to a user
+    const sendMessage = async () => {
+        try {
+            const response = await axios.post(`http://localhost:3000/message/${id}`, {
+                userId: clickedUser._id,
+                text: newMessage
+            });
+            setNewMessage("");
+            console.log("Message sent:", response.data);
+        } catch (error) {
+            console.error("Error sending message:", error);
+        }
+    }
+
+    useEffect(() => {
+        if (!id) {
+          navigate("/");
+          return;
+        }
+        fetchMessage();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [id]);
+
+    // Log out
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+          const response = await axios.get('http://localhost:3000');
+          const { token } = response.data;
+          localStorage.removeItem('token', token);
+          navigate('/');
+        } catch (error) {
+          console.error('Logout error:', error);
+        }
+      };
+
+      useEffect(() => {
+        const fetchMessagesAndSetCurrentUser = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    navigate('/');
+                    return;
+                }
+                const tokenWithoutBearer = token.replace('Bearer ', '');
+                const response = await axios.get(`http://localhost:3000/message/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${tokenWithoutBearer}`,
+                    },
+                });
+                setMessages(response.data);
+            } catch (error) {
+                console.error("Error fetching messages:", error);
+            }
+        };
+        fetchMessagesAndSetCurrentUser(); 
+    }, []); 
+ 
     return (
         <div className="auth-container auth-container-extra">
             <div className="users-list">
@@ -88,40 +93,33 @@ const setCurrentUserFromToken = () => {
                     <button className="groupchat-btn">Filter by groupchat</button>
                 </div>
                 {messages.map((message, index) => (
-                <a key={index} href="/message"><div className="flex-column user-brief-left">
+                <Link key={index} to={`/message/${message.user._id}`} onClick={() => handleClick(message.user)}><div className="flex-column user-brief-left">
                     <h4>{message.user.username}</h4>
                     <p>{message.text}</p>
-                    <p>{message.time}</p>
-                </div></a>
+                </div></Link>
                 ))}
             </div>
             <div className="message-section flex-column">
                 <div className="flex-row username-header">
                     <div className="flex-row user-img-name">
                         <img className="user-icon" src="../src/assets/icons/woman.png"></img>
+                        {clickedUser && (
                         <div className="flex-column">
-                            <h4>Jessica Simpson</h4>
-                            <h4>Online</h4>
+                            <h4>{clickedUser.username}</h4>
+                            <h4>Offline</h4>
                         </div>
+                        )}
                     </div>
                     <button onClick={handleSubmit} type="submit" className="login-btn">Log out</button>
                 </div>
                 <div className="flex-column messages-container">
-                {messages.map((message, index) => (
-                    <div key={index} className="message-window flex-column">
-                        <p className="p-message">{message.text}</p>
-                        <p className="p-sent-by">{message.time}</p>
-                        <p className="p-sent-by">by {message.user.username || "by Anonymous"}</p>
-                    </div>
-                    ))}
+
                 </div>
-                <form className="send-message-form" onSubmit={handleSubmitMessage}>
+                <form className="send-message-form" >
                     <div className="flex-row input-btn-form-container">
                         <input 
                             type="text" 
                             placeholder="Type your message here..." 
-                            value={inputValue} 
-                            onChange={(e) => setInputValue(e.target.value)} 
                             />
                         <button type="submit">Send</button>
                     </div>
