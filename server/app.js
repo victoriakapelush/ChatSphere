@@ -13,6 +13,7 @@ const cors = require('cors');
 
 // Import routes
 const indexRouter = require('./routes/index');
+const messageScreenRouter = require('./routes/MessageScreen');
 const loginRouter = require('./routes/login');
 const logoutRouter = require('./routes/logout');
 
@@ -21,13 +22,6 @@ var app = express();
 app.use(cors({
   origin: 'http://localhost:5173', 
   credentials: true
-}));
-
-// Add session middleware
-app.use(session({
-  secret: 'cats',
-  resave: false,
-  saveUninitialized: false
 }));
 
 const mongoDB = "mongodb+srv://victoriakapelush:sakuraSun123@cluster0.qpt6ako.mongodb.net/ChatSphere?retryWrites=true&w=majority";
@@ -42,23 +36,31 @@ mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
     console.error('Error connecting to MongoDB:', error);
   });
 
-// Initialize passport and session
-app.use(passport.initialize());
-app.use(passport.session());
-
 // Other middleware
+app.use(express.static(path.join(__dirname, 'client/dist')));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('uploads')); 
+app.use(cookieParser());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static('uploads')); 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'client/dist')));
+
+  // Add session middleware
+  app.use(session({
+    secret: 'cats',
+    resave: false,
+    saveUninitialized: false
+  }));
+  
+  // Initialize passport and session
+  app.use(passport.initialize());
+  app.use(passport.session());
 
 // Define routes
 app.use('/', indexRouter);
+app.use('/message', messageScreenRouter);
 app.use('/login', loginRouter);
 app.use('/logout', logoutRouter);
 
