@@ -7,35 +7,17 @@ import { jwtDecode } from 'jwt-decode'
 
 function Message() {
     const navigate = useNavigate();
-    const [messages, setMessages] = useState([]);
-    const [inputValue, setInputValue] = useState("");
-    const [currentUser, setCurrentUser] = useState(null);
-    const { id } = useParams();
+    const [clickedUser, setClickedUser] = useState(null);
+    const [currentUser, setCurrentUser] = useState("");
+    const [users, setUsers] = useState([]);
 
-/*Function to decode JWT token and set current user
-const setCurrentUserFromToken = () => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        const decoded = jwtDecode(token);
-        setCurrentUser(decoded.username); 
-    }
-};*/
+    const handleClick = (username) => {
+        setClickedUser(username);
+    };
 
-    // Log out
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-          const response = await axios.get('http://localhost:3000');
-          const { token } = response.data;
-          localStorage.removeItem('token', token);
-          navigate('/');
-        } catch (error) {
-          console.error('Logout error:', error);
-        }
-      };
-
-      useEffect(() => {
-        const fetchMessagesAndSetCurrentUser = async () => {
+    // Fetch all users except the current user
+    useEffect(() => {
+        const fetchUsers = async () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
@@ -43,43 +25,39 @@ const setCurrentUserFromToken = () => {
                     return;
                 }
                 const tokenWithoutBearer = token.replace('Bearer ', '');
-                const response = await axios.get(`http://localhost:3000/message`, {
+                const response = await axios.get('http://localhost:3000', {
                     headers: {
                         Authorization: `Bearer ${tokenWithoutBearer}`,
                     },
                 });
-                setMessages(response.data);
-                //setCurrentUserFromToken(); 
+
+                const currentUserID = jwtDecode(tokenWithoutBearer).id;
+                const filteredUsers = response.data.filter(user => user._id !== currentUserID);
+                setUsers(filteredUsers);
             } catch (error) {
-                console.error("Error fetching messages:", error);
+                console.error('Error fetching users:', error);
             }
         };
-        fetchMessagesAndSetCurrentUser(); 
-    }, []);   
+        fetchUsers();
+    }, [navigate]);
 
-      const handleSubmitMessage = async (e) => {
-        e.preventDefault(); 
+    // Function to decode JWT token and set current user
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decoded = jwtDecode(token);
+            setCurrentUser(decoded.username); 
+        }
+    }, []);
+
+    // Log out
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-              navigate('/');
-              return;
-            }
-            const tokenWithoutBearer = token.replace('Bearer ', '');
-            const response = await axios.post(
-                "http://localhost:3000/message",
-                { text: inputValue }, 
-                {
-                    headers: {
-                        Authorization: `Bearer ${tokenWithoutBearer}`,
-                    }
-                }
-            );
-            const { message } = response.data;
-            console.log("Message created:", message);
-            setInputValue("");
+            localStorage.removeItem('token');
+            navigate('/');
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error('Logout error:', error);
         }
     };
     
@@ -90,17 +68,16 @@ const setCurrentUserFromToken = () => {
                     <button className="groupchat-btn">Create a groupchat</button>
                     <button className="groupchat-btn">Filter by groupchat</button>
                 </div>
-                {messages.map((message, index) => (
-                <Link key={index} to={`/message/${id}`}><div className="flex-column user-brief-left">
-                    <h4>{}</h4>
-                    <p>{message.text}</p>
+                {users.map((user, index) => (
+                <Link key={index} to={`/message/${user._id}`}><div className="flex-column user-brief-left" onClick={() => handleClick(user.username)}>
+                    <h4>{user.username}</h4>
                 </div></Link>
                 ))}
             </div>
             <div className="message-section flex-column">
                 <div className="flex-row username-header">
                     <div className="flex-row user-img-name">
-                        <img className="user-icon" src="../src/assets/icons/woman.png"></img>
+                        <img className="user-icon" src="../src/assets/icons/woman.png" alt="User Icon" />
                         <div className="flex-column">
                             <h4>{currentUser}</h4>
                             <h4>Online</h4>
@@ -109,28 +86,10 @@ const setCurrentUserFromToken = () => {
                     <button onClick={handleSubmit} type="submit" className="login-btn">Log out</button>
                 </div>
                 <div className="flex-column messages-container">
-                {messages.map((message, index) => (
-                    <div key={index} className="message-window flex-column">
-                        <p className="p-message">{message.text}</p>
-                        <p className="p-sent-by">{message.time}</p>
-                        <p className="p-sent-by">by {  "by Anonymous"}</p>
-                    </div>
-                    ))}
                 </div>
-                <form className="send-message-form" onSubmit={handleSubmitMessage}>
-                    <div className="flex-row input-btn-form-container">
-                        <input 
-                            type="text" 
-                            placeholder="Type your message here..." 
-                            value={inputValue} 
-                            onChange={(e) => setInputValue(e.target.value)} 
-                            />
-                        <button type="submit">Send</button>
-                    </div>
-                </form>
             </div>
         </div>
     )
 }
 
-export default Message
+export default Message;

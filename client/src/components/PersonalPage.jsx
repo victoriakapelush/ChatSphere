@@ -9,46 +9,64 @@ function PersonalPage() {
     const navigate = useNavigate();
     const [messages, setMessages] = useState([]);
     const [clickedUser, setClickedUser] = useState(null);
+    const [currentUser, setCurrentUser] = useState("");
     const { id } = useParams();
-    const [newMessage, setNewMessage] = useState("");
+    const [inputValue, setInputValue] = useState("");
+    const [users, setUsers] = useState([]);
 
-    const handleClick = (user) => {
-      setClickedUser(user);
-    };
+    // Fetch all users
+    useEffect(() => {
+        const fetchUsers = async () => {
+          try {
+            const response = await axios.get('http://localhost:3000');
+            setUsers(response.data);
+          } catch (error) {
+            console.error('Error fetching users:', error);
+          }
+        };
+    
+        fetchUsers();
+      }, []);
 
-    // Display all mesagges
-    const fetchMessage = async () => {
-        try {
-            const response = await axios.get(`http://localhost:3000/message/${id}`);
-            setNewMessage(response.data);
-        }
-        catch (error) {
-            console.error("Error fetching message:", error);
-        }
-    }
+    const handleClick = (username) => {
+        setClickedUser(username);
+      };
+
+        // Function to decode JWT token and set current user
+        const setCurrentUserFromToken = () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                const decoded = jwtDecode(token);
+                setCurrentUser(decoded.username); 
+            }
+        };
 
     // Send a message to a user
-    const sendMessage = async () => {
+    const handleSubmitMessage = async (e) => {
+        e.preventDefault(); 
         try {
-            const response = await axios.post(`http://localhost:3000/message/${id}`, {
-                userId: clickedUser._id,
-                text: newMessage
-            });
-            setNewMessage("");
-            console.log("Message sent:", response.data);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                navigate('/');
+                return;
+            }
+            const tokenWithoutBearer = token.replace('Bearer ', '');
+            const response = await axios.post(
+                `http://localhost:3000/message/${id}`,
+                { text: inputValue }, 
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokenWithoutBearer}`,
+                    }
+                }
+            );
+            const { message } = response.data;
+            console.log("Message created:", message);
+            setInputValue("");
         } catch (error) {
             console.error("Error sending message:", error);
         }
-    }
-
-    useEffect(() => {
-        if (!id) {
-          navigate("/");
-          return;
-        }
-        fetchMessage();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [id]);
+    };
 
     // Log out
     const handleSubmit = async (e) => {
@@ -64,26 +82,30 @@ function PersonalPage() {
       };
 
       useEffect(() => {
-        const fetchMessagesAndSetCurrentUser = async () => {
+        const fetchCurrentUserAndMessages = async () => {
             try {
+                setCurrentUserFromToken();
                 const token = localStorage.getItem('token');
                 if (!token) {
                     navigate('/');
                     return;
                 }
                 const tokenWithoutBearer = token.replace('Bearer ', '');
+                
+                // Fetch messages associated with the current user
                 const response = await axios.get(`http://localhost:3000/message/${id}`, {
                     headers: {
                         Authorization: `Bearer ${tokenWithoutBearer}`,
                     },
                 });
+
                 setMessages(response.data);
             } catch (error) {
-                console.error("Error fetching messages:", error);
+                console.error("Error fetching user and messages:", error);
             }
         };
-        fetchMessagesAndSetCurrentUser(); 
-    }, []); 
+        fetchCurrentUserAndMessages();
+    }, [navigate]); 
  
     return (
         <div className="auth-container auth-container-extra">
@@ -92,10 +114,9 @@ function PersonalPage() {
                     <button className="groupchat-btn">Create a groupchat</button>
                     <button className="groupchat-btn">Filter by groupchat</button>
                 </div>
-                {messages.map((message, index) => (
-                <Link key={index} to={`/message/${message.user._id}`} onClick={() => handleClick(message.user)}><div className="flex-column user-brief-left">
-                    <h4>{message.user.username}</h4>
-                    <p>{message.text}</p>
+                {users.map((user, index) => (
+                <Link key={index} to={`/message/${user._id}`}><div className="flex-column user-brief-left" onClick={() => handleClick(user.username)}>
+                    <h4>{user.username}</h4>
                 </div></Link>
                 ))}
             </div>
@@ -103,23 +124,29 @@ function PersonalPage() {
                 <div className="flex-row username-header">
                     <div className="flex-row user-img-name">
                         <img className="user-icon" src="../src/assets/icons/woman.png"></img>
-                        {clickedUser && (
                         <div className="flex-column">
-                            <h4>{clickedUser.username}</h4>
+                            <h4>{clickedUser}</h4>
                             <h4>Offline</h4>
                         </div>
-                        )}
                     </div>
                     <button onClick={handleSubmit} type="submit" className="login-btn">Log out</button>
                 </div>
                 <div className="flex-column messages-container">
-
+                    {messages.map((message, index) => (
+                    <div key={index} className="flex-column message-window">
+                        <p className="p-message">{message.text}</p>
+                        <p className="p-sent-by">{message.time}</p>
+                    </div>
+                    ))}
                 </div>
-                <form className="send-message-form" >
+                <form className="send-message-form" onSubmit={handleSubmitMessage}>
                     <div className="flex-row input-btn-form-container">
                         <input 
                             type="text" 
                             placeholder="Type your message here..." 
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            required
                             />
                         <button type="submit">Send</button>
                     </div>

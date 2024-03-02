@@ -1,5 +1,6 @@
 const Message = require("../models/Message");
 const User = require("../models/User");
+const Conversation = require("../models/Conversation");
 
 function getRelativeTime(date) {
     const now = Date.now();
@@ -21,31 +22,52 @@ function getRelativeTime(date) {
   }
 
   const messageGet = (req, res) => {
-    const currentUser = req.user;
-    Message.find({ receiver: req.params.id })
-      .populate('sender')
-      .then(messages => {
-        if (messages.length === 0) {
-          return res.status(404).json({ message: 'No messages found' });
-        }
-        const formattedMessages = messages.map(message => ({
-          text: message.text,
-          time: getRelativeTime(message.time),
-          sender: currentUser,
-          receiver: req.params.id
-        }));
-        res.json(formattedMessages);
-      })
-      .catch(err => res.status(500).json({ error: 'Error fetching messages' }));
-  };
+    const currentUser = req.user.id; 
+    const senderId = req.params.id; 
+
+    Message.find({ sender: senderId, receiver: currentUser })
+        .populate('sender')
+        .populate('receiver') 
+        .then(messages => {
+            if (messages.length === 0) {
+                return res.status(404).json({ message: 'No messages found' });
+            }
+            const formattedMessages = messages.map(message => ({
+                text: message.text,
+                time: getRelativeTime(message.time),
+                sender: message.sender,
+                receiver: message.receiver
+            }));
+            res.json(formattedMessages);
+        })
+        .catch(err => res.status(500).json({ error: 'Error fetching messages' }));
+};
+
 
   const messagePost = async (req, res) => {
     try {
       const currentUser = await User.findById(req.user.id);
       const { text } = req.body;
       const receiver = req.params.id;
-      const message = new Message({ receiver, text, user: currentUser });
+      const senderName = req.user.username;
+
+      let conversation = await Conversation.findOne({
+        participants: { $all: [req.user.id, receiver] }
+      });
+
+      if (!conversation) {
+        conversation = new Conversation({
+          participants: [req.user.id, receiver],
+          messages: []
+        });
+      }
+
+      const message = new Message({ receiver, sender: currentUser, text, user: senderName });
       await message.save();
+
+      // Add the message to the Conversation
+      conversation.messages.push(message);
+      await conversation.save();
 
       currentUser.messagesToOtherUsers.push(message);
       await currentUser.save();
