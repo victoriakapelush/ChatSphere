@@ -1,6 +1,7 @@
 const Message = require("../models/Message");
 const User = require("../models/User");
 const Conversation = require("../models/Conversation");
+const { DateTime } = require("luxon");
 
 function getRelativeTime(date) {
     const now = Date.now();
@@ -21,7 +22,7 @@ function getRelativeTime(date) {
     }
   }
 
-  const messageGet = (req, res) => {
+  /*const messageGet = (req, res) => {
     const currentUser = req.user.id; 
     const senderId = req.params.id; 
 
@@ -41,6 +42,32 @@ function getRelativeTime(date) {
             res.json(formattedMessages);
         })
         .catch(err => res.status(500).json({ error: 'Error fetching messages' }));
+};*/
+const messageGet = (req, res) => {
+  const currentUser = req.user.id;
+  Conversation.find({ participants: currentUser })
+      .populate('participants') 
+      .populate('messages')
+      .then(conversations => {
+          if (conversations.length === 0) {
+              return res.status(404).json({ message: 'No conversations found' });
+          }
+          const formattedConversations = conversations.map(conversation => {
+            const formattedMessages = conversation.messages.map(message => ({
+                text: message.text,
+                time: getRelativeTime(new Date(message.time)),
+                sender: message.sender,
+                receiver: message.receiver
+            }));
+            return {
+                _id: conversation._id,
+                participants: conversation.participants,
+                messages: formattedMessages
+            };
+        });
+        res.json(formattedConversations);
+    })
+      .catch(err => res.status(500).json({ error: 'Error fetching conversations' }));
 };
 
 
@@ -50,36 +77,28 @@ function getRelativeTime(date) {
       const { text } = req.body;
       const receiver = req.params.id;
       const senderName = req.user.username;
-
       let conversation = await Conversation.findOne({
         participants: { $all: [req.user.id, receiver] }
       });
-
       if (!conversation) {
         conversation = new Conversation({
           participants: [req.user.id, receiver],
           messages: []
         });
       }
-
-      const message = new Message({ receiver, sender: currentUser, text, user: senderName });
+      const message = new Message({ receiver, sender: currentUser, text, user: senderName, time: new Date() });
       await message.save();
-
       // Add the message to the Conversation
       conversation.messages.push(message);
       await conversation.save();
-
       currentUser.messagesToOtherUsers.push(message);
       await currentUser.save();
-
       const receiverUser = await User.findById(receiver);
       if (!receiverUser) {
         return res.status(404).json({ message: "Receiver not found" });
       }
-
       receiverUser.messagesFromOtherUsers.push(message);
       await receiverUser.save();
-
       res.status(201).json({ message: "Message created successfully" })
     } catch (error) {
       console.error(error);

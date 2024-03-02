@@ -13,20 +13,33 @@ function PersonalPage() {
     const { id } = useParams();
     const [inputValue, setInputValue] = useState("");
     const [users, setUsers] = useState([]);
+    const [conversation, setConversation] = useState([]);
+    const conversationId = useParams().id;
+    const targetConversation = conversation.find(conversation => conversation._id === conversationId);
 
-    // Fetch all users
-    useEffect(() => {
-        const fetchUsers = async () => {
-          try {
-            const response = await axios.get('http://localhost:3000');
-            setUsers(response.data);
-          } catch (error) {
-            console.error('Error fetching users:', error);
+// Function to fetch the current user's information
+const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const response = await axios.get('http://localhost:3000', {
+          headers: {
+            authorization: `Bearer ${token}`
           }
-        };
-    
-        fetchUsers();
-      }, []);
+        });
+        setUsers(response.data);
+        console.log(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+  
+  useEffect(() => {
+    setCurrentUserFromToken();
+    fetchUsers();
+  }, []);
+  
 
     const handleClick = (username) => {
         setClickedUser(username);
@@ -37,7 +50,8 @@ function PersonalPage() {
             const token = localStorage.getItem('token');
             if (token) {
                 const decoded = jwtDecode(token);
-                setCurrentUser(decoded.username); 
+                setCurrentUser(decoded.id); 
+                console.log(decoded.id)
             }
         };
 
@@ -50,10 +64,11 @@ function PersonalPage() {
                 navigate('/');
                 return;
             }
+            const { _id: conversationId, receiver } = conversation;
             const tokenWithoutBearer = token.replace('Bearer ', '');
             const response = await axios.post(
                 `http://localhost:3000/message/${id}`,
-                { text: inputValue }, 
+                { text: inputValue, receiver  }, 
                 {
                     headers: {
                         Authorization: `Bearer ${tokenWithoutBearer}`,
@@ -81,42 +96,44 @@ function PersonalPage() {
         }
       };
 
+      // Fetch comversation between current user and some other user
       useEffect(() => {
-        const fetchCurrentUserAndMessages = async () => {
+        const fetchConversations = async () => {
             try {
-                setCurrentUserFromToken();
                 const token = localStorage.getItem('token');
                 if (!token) {
                     navigate('/');
                     return;
                 }
                 const tokenWithoutBearer = token.replace('Bearer ', '');
-                
-                // Fetch messages associated with the current user
-                const response = await axios.get(`http://localhost:3000/message/${id}`, {
+                const response = await axios.get('http://localhost:3000/message', {
                     headers: {
                         Authorization: `Bearer ${tokenWithoutBearer}`,
                     },
                 });
-
-                setMessages(response.data);
+                
+                setConversation(response.data);
             } catch (error) {
-                console.error("Error fetching user and messages:", error);
+                console.error('Error fetching conversations:', error);
             }
         };
-        fetchCurrentUserAndMessages();
-    }, [navigate]); 
+        fetchConversations();
+    }, [navigate]);
+
+
  
     return (
         <div className="auth-container auth-container-extra">
             <div className="users-list">
                 <div className="groupchat-btns-container flex-row">
-                    <button className="groupchat-btn">Create a groupchat</button>
-                    <button className="groupchat-btn">Filter by groupchat</button>
+                    <Link to="/message"><button className="groupchat-btn">Go back</button></Link>
+                    <button className="groupchat-btn">Show conversations</button>
                 </div>
-                {users.map((user, index) => (
-                <Link key={index} to={`/message/${user._id}`}><div className="flex-column user-brief-left" onClick={() => handleClick(user.username)}>
-                    <h4>{user.username}</h4>
+                {conversation.map((conversation, index) => (
+                <Link key={index} to={`/message/${conversation._id}`}><div className="flex-column user-brief-left" onClick={() => handleClick(conversation.participants[1]?.username)}>
+                    <h4>From: {conversation.participants[1]?.username}</h4>
+                    <h4>To: {conversation.participants[0]?.username}</h4>
+                    <p>{conversation.messages[0]?.text}</p> 
                 </div></Link>
                 ))}
             </div>
@@ -131,14 +148,16 @@ function PersonalPage() {
                     </div>
                     <button onClick={handleSubmit} type="submit" className="login-btn">Log out</button>
                 </div>
+                {targetConversation && (
                 <div className="flex-column messages-container">
-                    {messages.map((message, index) => (
-                    <div key={index} className="flex-column message-window">
+                    {targetConversation.messages.map((message, index) => (
+                    <div key={index} className={`flex-column message-window ${message.sender === currentUser ? 'sent-by-me' : 'sent-by-other'}`}>
                         <p className="p-message">{message.text}</p>
                         <p className="p-sent-by">{message.time}</p>
                     </div>
                     ))}
                 </div>
+                )}
                 <form className="send-message-form" onSubmit={handleSubmitMessage}>
                     <div className="flex-row input-btn-form-container">
                         <input 

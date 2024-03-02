@@ -9,15 +9,15 @@ function Message() {
     const navigate = useNavigate();
     const [clickedUser, setClickedUser] = useState(null);
     const [currentUser, setCurrentUser] = useState("");
-    const [users, setUsers] = useState([]);
+    const [conversation, setConversation] = useState([]);
 
     const handleClick = (username) => {
         setClickedUser(username);
     };
 
-    // Fetch all users except the current user
+    // Fetch all conversations involving the current user
     useEffect(() => {
-        const fetchUsers = async () => {
+        const fetchConversations = async () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
@@ -25,20 +25,18 @@ function Message() {
                     return;
                 }
                 const tokenWithoutBearer = token.replace('Bearer ', '');
-                const response = await axios.get('http://localhost:3000', {
+                const response = await axios.get('http://localhost:3000/message', {
                     headers: {
                         Authorization: `Bearer ${tokenWithoutBearer}`,
                     },
                 });
-
-                const currentUserID = jwtDecode(tokenWithoutBearer).id;
-                const filteredUsers = response.data.filter(user => user._id !== currentUserID);
-                setUsers(filteredUsers);
+                
+                setConversation(response.data);
             } catch (error) {
-                console.error('Error fetching users:', error);
+                console.error('Error fetching conversations:', error);
             }
         };
-        fetchUsers();
+        fetchConversations();
     }, [navigate]);
 
     // Function to decode JWT token and set current user
@@ -65,12 +63,14 @@ function Message() {
         <div className="auth-container auth-container-extra">
             <div className="users-list">
                 <div className="groupchat-btns-container flex-row">
-                    <button className="groupchat-btn">Create a groupchat</button>
-                    <button className="groupchat-btn">Filter by groupchat</button>
+                    <button className="groupchat-btn">Show users</button>
+                    <button className="groupchat-btn">Show conversations</button>
                 </div>
-                {users.map((user, index) => (
-                <Link key={index} to={`/message/${user._id}`}><div className="flex-column user-brief-left" onClick={() => handleClick(user.username)}>
-                    <h4>{user.username}</h4>
+                {conversation.map((conversation, index) => (
+                <Link key={index} to={`/message/${conversation._id}`}><div className="flex-column user-brief-left" onClick={() => handleClick(conversation.participants.username)}>
+                    <h4>From: {conversation.participants[1]?.username}</h4>
+                    <h4>To: {conversation.participants[0]?.username}</h4>
+                    <p>{conversation.messages[0]?.text}</p> 
                 </div></Link>
                 ))}
             </div>

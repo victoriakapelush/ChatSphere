@@ -245,6 +245,7 @@ footer a {
 .messages-container {
   gap: 1rem;
   margin: 1rem 0;
+  width: 100%;
 }
 
 .p-sent-by {
@@ -290,4 +291,21 @@ footer a {
 .input-btn-form-container button:hover {
   background-color: var(--dark);
   color: var(--light);
+}
+
+
+.sent-by-me {
+  align-self: flex-end;
+  background-color: #DCF8C6; /* Background color for messages sent by the logged-in user */
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 4px;
+}
+
+.sent-by-other {
+  align-self: flex-start; /* Align messages to the left */
+  background-color: #EAEAEA; /* Background color for messages sent by other users */
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 4px;
 }
