@@ -9,7 +9,9 @@ function PersonalPage() {
     const navigate = useNavigate();
     const [messages, setMessages] = useState([]);
     const [clickedUser, setClickedUser] = useState(null);
+    const [currentUserByUsername, setCurrentUserByUsername] = useState("");
     const [currentUser, setCurrentUser] = useState("");
+    const [messageSenders, setMessageSenders] = useState([]);
     const { id } = useParams();
     const [inputValue, setInputValue] = useState("");
     const [users, setUsers] = useState([]);
@@ -43,6 +45,7 @@ const fetchUsers = async () => {
 
     const handleClick = (username) => {
         setClickedUser(username);
+        console.log(username)
       };
 
         // Function to decode JWT token and set current user
@@ -51,11 +54,11 @@ const fetchUsers = async () => {
             if (token) {
                 const decoded = jwtDecode(token);
                 setCurrentUser(decoded.id); 
-                console.log(decoded.id)
+                setCurrentUserByUsername(decoded.username)
             }
         };
 
-            // Log out
+    // Log out
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -83,14 +86,18 @@ const fetchUsers = async () => {
                         Authorization: `Bearer ${tokenWithoutBearer}`,
                     },
                 });
-                
+                const allSenders = response.data.map(conversation => {
+                    const messageSender = conversation.participants.find(participant => participant.username !== currentUserByUsername);
+                    return messageSender ? messageSender.username : '';
+                });
                 setConversation(response.data);
+                setMessageSenders(allSenders);
             } catch (error) {
                 console.error('Error fetching conversations:', error);
             }
         };
         fetchConversations();
-    }, [navigate]);
+    }, [currentUserByUsername, navigate]);
 
     // Function to handle message submission
     const handleSubmitMessage = async (e) => {
@@ -139,12 +146,13 @@ const fetchUsers = async () => {
                     <Link to="/message"><button className="groupchat-btn">Go back</button></Link>
                     <button className="groupchat-btn">Show conversations</button>
                 </div>
-                {conversation.map((conversation, index) => (
-                <Link key={index} to={`/message/${conversation._id}`}><div className="flex-column user-brief-left" onClick={() => handleClick(conversation.participants[1]?.username)}>
-                    <h4>From: {conversation.participants[1]?.username}</h4>
-                    <h4>To: {conversation.participants[0]?.username}</h4>
-                    <p>{conversation.messages[0]?.text}</p> 
-                </div></Link>
+                {messageSenders && conversation.map((conversation, index) => (
+                    <Link key={index} to={`/message/${conversation._id}`}>
+                        <div className="flex-column user-brief-left" onClick={() => handleClick(conversation.participants.username)}>
+                            <h4>From: {messageSenders[index]}</h4>
+                            <p>{conversation.messages[0]?.text}</p> 
+                        </div>
+                    </Link>
                 ))}
             </div>
             <div className="message-section flex-column">
@@ -152,8 +160,10 @@ const fetchUsers = async () => {
                     <div className="flex-row user-img-name">
                         <img className="user-icon" src="../src/assets/icons/woman.png"></img>
                         <div className="flex-column">
-                            <h4>{clickedUser}</h4>
-                            <h4>Offline</h4>
+                        {messageSenders && messageSenders.map((sender, index) => (
+                            <h4 key={index}>{clickedUser}</h4>
+                        ))}
+                            <p>Offline</p> 
                         </div>
                     </div>
                     <button onClick={handleSubmit} type="submit" className="login-btn">Log out</button>
