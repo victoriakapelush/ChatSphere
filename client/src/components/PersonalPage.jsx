@@ -55,35 +55,7 @@ const fetchUsers = async () => {
             }
         };
 
-    // Send a message to a user
-    const handleSubmitMessage = async (e) => {
-        e.preventDefault(); 
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/');
-                return;
-            }
-            const { _id: conversationId, receiver } = conversation;
-            const tokenWithoutBearer = token.replace('Bearer ', '');
-            const response = await axios.post(
-                `http://localhost:3000/message/${id}`,
-                { text: inputValue, receiver  }, 
-                {
-                    headers: {
-                        Authorization: `Bearer ${tokenWithoutBearer}`,
-                    }
-                }
-            );
-            const { message } = response.data;
-            console.log("Message created:", message);
-            setInputValue("");
-        } catch (error) {
-            console.error("Error sending message:", error);
-        }
-    };
-
-    // Log out
+            // Log out
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -120,8 +92,46 @@ const fetchUsers = async () => {
         fetchConversations();
     }, [navigate]);
 
+    // Function to handle message submission
+    const handleSubmitMessage = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                navigate('/');
+                return;
+            }
 
- 
+            // Find conversation with the given ID
+            const targetConv = conversation.find(conv => conv._id === conversationId);
+            if (!targetConv) {
+                console.error('Conversation not found');
+                return;
+            }
+
+            // Extract receiver ID from the conversation
+            const receiver = targetConv.participants.find(participant => participant !== currentUser);
+            if (!receiver) {
+                console.error('Receiver not found');
+                return;
+            }
+
+            // Send message to the receiver
+            const tokenWithoutBearer = token.replace('Bearer ', '');
+            const response = await axios.post(`http://localhost:3000/message/${receiver._id}`, { text: inputValue }, {
+                headers: {
+                    Authorization: `Bearer ${tokenWithoutBearer}`,
+                }
+            });
+            console.log(receiver)
+            const { message } = response.data;
+            console.log("Message created:", message);
+            setInputValue("");
+        } catch (error) {
+            console.error("Error sending message:", error);
+        }
+    };
+    
     return (
         <div className="auth-container auth-container-extra">
             <div className="users-list">
