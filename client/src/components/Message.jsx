@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -9,13 +10,14 @@ function Message() {
     const navigate = useNavigate();
     const [clickedUser, setClickedUser] = useState(null);
     const [currentUser, setCurrentUser] = useState("");
+    const [messageSenders, setMessageSenders] = useState([]);
     const [conversation, setConversation] = useState([]);
+    const [currentConvo, setUsersForCurrentConvo] = useState([]);
 
     const handleClick = (username) => {
         setClickedUser(username);
     };
 
-    // Fetch all conversations involving the current user
     useEffect(() => {
         const fetchConversations = async () => {
             try {
@@ -30,14 +32,18 @@ function Message() {
                         Authorization: `Bearer ${tokenWithoutBearer}`,
                     },
                 });
-                
+                const allSenders = response.data.map(conversation => {
+                    const messageSender = conversation.participants.find(participant => participant.username !== currentUser);
+                    return messageSender ? messageSender.username : '';
+                });
                 setConversation(response.data);
+                setMessageSenders(allSenders);
             } catch (error) {
                 console.error('Error fetching conversations:', error);
             }
         };
         fetchConversations();
-    }, [navigate]);
+    }, [messageSenders, navigate]);
 
     // Function to decode JWT token and set current user
     useEffect(() => {
@@ -66,12 +72,13 @@ function Message() {
                     <button className="groupchat-btn">Show users</button>
                     <button className="groupchat-btn">Show conversations</button>
                 </div>
-                {conversation.map((conversation, index) => (
-                <Link key={index} to={`/message/${conversation._id}`}><div className="flex-column user-brief-left" onClick={() => handleClick(conversation.participants.username)}>
-                    <h4>From: {conversation.participants[1]?.username}</h4>
-                    <h4>To: {conversation.participants[0]?.username}</h4>
-                    <p>{conversation.messages[0]?.text}</p> 
-                </div></Link>
+                {messageSenders && conversation.map((conversation, index) => (
+                    <Link key={index} to={`/message/${conversation._id}`}>
+                        <div className="flex-column user-brief-left" onClick={() => handleClick(conversation.participants.username)}>
+                            <h4>From: {messageSenders[index]}</h4>
+                            <p>{conversation.messages[0]?.text}</p> 
+                        </div>
+                    </Link>
                 ))}
             </div>
             <div className="message-section flex-column">
