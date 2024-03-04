@@ -2,6 +2,7 @@ const Message = require("../models/Message");
 const User = require("../models/User");
 const Conversation = require("../models/Conversation");
 const { DateTime } = require("luxon");
+const { v4: uuidv4 } = require('uuid');
 
 function getRelativeTime(date) {
     const now = Date.now();
@@ -43,6 +44,7 @@ function getRelativeTime(date) {
         })
         .catch(err => res.status(500).json({ error: 'Error fetching messages' }));
 };*/
+
 const messageGet = (req, res) => {
   const currentUser = req.user.id;
   Conversation.find({ participants: currentUser })
@@ -72,6 +74,7 @@ const messageGet = (req, res) => {
 
 
   const messagePost = async (req, res) => {
+    const conversationId = uuidv4();
     try {
       const currentUser = await User.findById(req.user.id);
       const { text } = req.body;
@@ -82,6 +85,7 @@ const messageGet = (req, res) => {
       });
       if (!conversation) {
         conversation = new Conversation({
+          _id: conversationId,
           participants: [req.user.id, receiver],
           messages: []
         });

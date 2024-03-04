@@ -112,8 +112,12 @@ const fetchUsers = async () => {
             // Find conversation with the given ID
             const targetConv = conversation.find(conv => conv._id === conversationId);
             if (!targetConv) {
-                console.error('Conversation not found');
-                return;
+                const newConversation = {
+                    _id: conversationId,
+                    participants: [receiver, currentUser], 
+                    messages: [] 
+                };
+                setConversation([...conversation, newConversation]);
             }
 
             // Extract receiver ID from the conversation
@@ -144,7 +148,6 @@ const fetchUsers = async () => {
             <div className="users-list">
                 <div className="groupchat-btns-container flex-row">
                     <Link to="/message"><button className="groupchat-btn">Go back</button></Link>
-                    <button className="groupchat-btn">Show conversations</button>
                 </div>
                 {messageSenders && conversation.map((conversation, index) => (
                     <Link key={index} to={`/message/${conversation._id}`}>

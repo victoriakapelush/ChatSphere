@@ -1,12 +1,13 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
+import { v4 as uuidv4 } from 'uuid'
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
 import axios from "axios";
 import { jwtDecode } from 'jwt-decode'
 
-function Message() {
+function ShowUsers() {
     const navigate = useNavigate();
     const [clickedUser, setClickedUser] = useState(null);
     const [currentUser, setCurrentUser] = useState("");
@@ -14,7 +15,11 @@ function Message() {
     const [conversation, setConversation] = useState([]);
     const [currentConvo, setUsersForCurrentConvo] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
+    const newConversationId = uuidv4();
+    const conversationId = useParams().id;
+    const targetConversation = conversation.find(conversation => conversation._id === conversationId);
 
+    useEffect(() => {
         const fetchAllUsers = async () => {
             try {
                 const token = localStorage.getItem('token');
@@ -39,6 +44,10 @@ function Message() {
                 console.log('Error fetching all users', error);
             }
         };
+    
+        fetchAllUsers();
+    }, []); // Empty dependency array means this effect runs once on mount
+    
 
     
     const handleClick = (username) => {
@@ -106,14 +115,12 @@ function Message() {
         <div className="auth-container auth-container-extra">
             <div className="users-list">
                 <div className="groupchat-btns-container flex-row">
-                    <Link to="/message/users"><button className="groupchat-btn" onClick={fetchAllUsers}>Show all users</button></Link>
                     <Link to="/message"><button className="groupchat-btn">Show conversations</button></Link>
                 </div>
-                {messageSenders && conversation.map((conversation, index) => (
-                    <Link key={index} to={`/message/${conversation._id}`}>
-                        <div className="flex-column user-brief-left" onClick={() => handleClick(conversation.participants.username)}>
-                            <h4>From: {messageSenders[index]}</h4>
-                            <p>{conversation.messages[0]?.text}</p> 
+                {conversation && allUsers.map((user, index) => (
+                    <Link key={index} to={`/message/users/${newConversationId}`}>
+                        <div className="flex-column user-brief-left">
+                            <h4>{user}</h4>
                         </div>
                     </Link>
                 ))}
@@ -136,4 +143,4 @@ function Message() {
     )
 }
 
-export default Message;
+export default ShowUsers;

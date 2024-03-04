@@ -16,6 +16,7 @@ const indexRouter = require('./routes/index');
 const messageScreenRouter = require('./routes/MessageScreen');
 const loginRouter = require('./routes/login');
 const logoutRouter = require('./routes/logout');
+const usersRouter = require('./routes/users');
 
 var app = express();
 
@@ -61,6 +62,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Define routes
 app.use('/', indexRouter);
 app.use('/message', messageScreenRouter);
+app.use('/message/users', usersRouter);
 app.use('/login', loginRouter);
 app.use('/logout', logoutRouter);
 
