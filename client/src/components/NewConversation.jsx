@@ -16,6 +16,7 @@ function NewConversation() {
     const [currentConvo, setUsersForCurrentConvo] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
     const [inputValue, setInputValue] = useState(""); // Define inputValue state variable
+    const newConversationId = uuidv4();
     const conversationId = useParams().id; // Get conversation ID from params
     const targetConversation = conversation.find(conversation => conversation._id === conversationId);
 
@@ -53,6 +54,10 @@ function NewConversation() {
     const handleClick = (username) => {
         setClickedUser(username);
     };
+    
+    useEffect(() => {
+        console.log(clickedUser);
+    }, [clickedUser]);
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -68,7 +73,7 @@ function NewConversation() {
                 return;
             }
                 const tokenWithoutBearer = token.replace('Bearer ', '');
-                const response = await axios.get('http://localhost:3000/message', {
+                const response = await axios.get(`http://localhost:3000/users/${conversationId}`, {
                     headers: {
                         Authorization: `Bearer ${tokenWithoutBearer}`,
                     },
@@ -116,50 +121,31 @@ function NewConversation() {
         }
     };
 
-    // Function to handle message submission
-    const handleSubmitMessage = async (e) => {
-        e.preventDefault();
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/');
-                return;
-            }
-            
-            // Find conversation with the given ID
-            const targetConv = conversation.find(conv => conv._id === conversationId);
-            if (!targetConv) {
-                const newConversation = {
-                    _id: conversationId,
-                    participants: [receiver, currentUser], 
-                    messages: [] 
-                };
-                setConversation([...conversation, newConversation]);
-            }
-
-            // Extract receiver ID from the conversation
-            const receiver = targetConv.participants.find(participant => participant !== currentUser);
-            if (!receiver) {
-                console.error('Receiver not found');
-                return;
-            }
-
-            // Send message to the receiver
-            const tokenWithoutBearer = token.replace('Bearer ', '');
-            const response = await axios.post(`http://localhost:3000/message/${receiver._id}`, { text: inputValue }, {
-                headers: {
-                    Authorization: `Bearer ${tokenWithoutBearer}`,
-                }
-            });
-            console.log(receiver)
-            const { message } = response.data;
-            console.log("Message created:", message);
-            setInputValue("");
-        } catch (error) {
-            console.error("Error sending message:", error);
+// Function to handle message submission
+const handleSubmitMessage = async (e) => {
+    e.preventDefault();
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/');
+            return;
         }
-    };
-    
+        // Send message to the receiver
+        const tokenWithoutBearer = token.replace('Bearer ', '');
+        const response = await axios.post(`http://localhost:3000/message/${conversationId}`, { receiver: clickedUser, text: inputValue }, {
+            headers: {
+                Authorization: `Bearer ${tokenWithoutBearer}`,
+            }
+        });
+        const { _id, message } = response.data;
+        console.log("Message created:", message);
+        setInputValue("");
+    } catch (error) {
+        console.error("Error sending message:", error);
+    }
+};
+
+        
     return (
         <div className="auth-container auth-container-extra">
             <div className="users-list">
@@ -167,6 +153,13 @@ function NewConversation() {
                     <Link to="/message"><button className="groupchat-btn">Show conversations</button></Link>
                     <Link to="/message/users"><button className="groupchat-btn">Show all users</button></Link>
                 </div>
+                {conversation && allUsers.map((user, index) => (
+                    <Link key={index} to={`/message/users/${newConversationId}`} onClick={() => handleClick(user)}>
+                        <div className="flex-column user-brief-left">
+                            <h4>{user}</h4>
+                        </div>
+                    </Link>
+                ))}
             </div>
             <div className="message-section flex-column">
                 <div className="flex-row username-header">

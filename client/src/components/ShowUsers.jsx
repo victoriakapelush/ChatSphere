@@ -118,7 +118,7 @@ function ShowUsers() {
                     <Link to="/message"><button className="groupchat-btn">Show conversations</button></Link>
                 </div>
                 {conversation && allUsers.map((user, index) => (
-                    <Link key={index} to={`/message/users/${newConversationId}`}>
+                    <Link key={index} to={`/message/users/${newConversationId}`} onClick={() => handleClick(user)}>
                         <div className="flex-column user-brief-left">
                             <h4>{user}</h4>
                         </div>

@@ -73,41 +73,63 @@ const messageGet = (req, res) => {
 };
 
 
-  const messagePost = async (req, res) => {
-    const conversationId = uuidv4();
-    try {
+const messagePost = async (req, res) => {
+  const conversationId = uuidv4();
+  try {
       const currentUser = await User.findById(req.user.id);
       const { text } = req.body;
-      const receiver = req.params.id;
       const senderName = req.user.username;
-      let conversation = await Conversation.findOne({
-        participants: { $all: [req.user.id, receiver] }
-      });
-      if (!conversation) {
-        conversation = new Conversation({
-          _id: conversationId,
-          participants: [req.user.id, receiver],
-          messages: []
-        });
+
+      // Extract receiver from the request body
+      const receiverFromBody = req.body.receiver;
+
+      // Check if the conversation already exists based on params.id
+      let conversation = await Conversation.findById(req.params.id);
+
+      if (conversation) {
+          // Logic for existing conversations
+          const message = new Message({ receiver: conversation.participants[1], sender: currentUser._id, text, user: senderName, time: new Date() });
+          await message.save();
+          // Add the message to the Conversation
+          conversation.messages.push(message);
+          await conversation.save();
+          currentUser.messagesToOtherUsers.push(message);
+          await currentUser.save();
+          const receiverUser = await User.findById(conversation.participants[1]);
+          if (!receiverUser) {
+              return res.status(404).json({ message: "Receiver not found" });
+          }
+          receiverUser.messagesFromOtherUsers.push(message);
+          await receiverUser.save();
+          res.status(201).json({ _id: conversationId, message: "Message created successfully" });
+      } else {
+          // Logic for new conversations
+          // Find the receiver user by username from the request body
+          const receiverUserFromBody = await User.findOne({ username: receiverFromBody });
+          if (!receiverUserFromBody) {
+              return res.status(404).json({ message: "Receiver not found" });
+          }
+          conversation = new Conversation({
+              _id: conversationId,
+              participants: [req.user.id, receiverUserFromBody._id],
+              messages: []
+          });
+          const message = new Message({ receiver: receiverUserFromBody._id, sender: currentUser._id, text, user: senderName, time: new Date() });
+          await message.save();
+          // Add the message to the Conversation
+          conversation.messages.push(message);
+          await conversation.save();
+          currentUser.messagesToOtherUsers.push(message);
+          await currentUser.save();
+          receiverUserFromBody.messagesFromOtherUsers.push(message);
+          await receiverUserFromBody.save();
+          res.status(201).json({ _id: conversationId, message: "Message created successfully" });
       }
-      const message = new Message({ receiver, sender: currentUser, text, user: senderName, time: new Date() });
-      await message.save();
-      // Add the message to the Conversation
-      conversation.messages.push(message);
-      await conversation.save();
-      currentUser.messagesToOtherUsers.push(message);
-      await currentUser.save();
-      const receiverUser = await User.findById(receiver);
-      if (!receiverUser) {
-        return res.status(404).json({ message: "Receiver not found" });
-      }
-      receiverUser.messagesFromOtherUsers.push(message);
-      await receiverUser.save();
-      res.status(201).json({ message: "Message created successfully" })
-    } catch (error) {
+  } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Internal server error" });
-    }
-  };
+  }
+};
+
   
   module.exports = { messageGet, messagePost };
