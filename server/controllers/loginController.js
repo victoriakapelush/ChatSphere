@@ -1,4 +1,3 @@
-const passport = require('passport');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -18,7 +17,7 @@ const login = async (req, res) => {
         id: user._id,
         username: user.username
       }
-      jwt.sign(payload, 'cats', { expiresIn: 86400 }, (err, token) => {
+      jwt.sign(payload, 'cats', { expiresIn: '3d' }, (err, token) => {
         if (err || !token) {
           return res.status(500).json({ message: 'Internal server error' });
         }
@@ -32,20 +31,23 @@ const login = async (req, res) => {
 
 function verifyJWT(req, res, next) {
   const token = req.headers["authorization"]?.split(' ')[1];
-
   if (token) {
     jwt.verify(token, 'cats', (err, decoded) => {
-      if(err) return res.json({
-        isLoggedIn: false,
-        message: "Failed to Authenticate"
-      })
-      req.user = {};
-      req.user.id = decoded.id
-      req.user.username = decoded.username
-      next()
-    })
+      if(err) {
+        console.error('Token verification error:', err);
+        return res.json({
+          isLoggedIn: false,
+          message: "Failed to Authenticate"
+        });
+      }
+      req.user = {
+        id: decoded.id,
+        username: decoded.username 
+      };
+      next();
+    });
   } else {
-    res.json({message: "Incorrect Token Given", isLoggedIn: false})
+    res.json({ message: "Incorrect Token Given", isLoggedIn: false });
   }
 }
 

@@ -6,8 +6,7 @@ const UserSchema = new Schema({
   username: { type: String },
   email: { type: String },
   password: { type: String },
-  messagesFromOtherUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }],
-  messagesToOtherUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }]
+  conversations: [{ type: Schema.Types.ObjectId, ref: 'Conversation' }]
 });
 
 module.exports = mongoose.model("User", UserSchema);

@@ -2,10 +2,10 @@ const express = require("express");
 const router = express.Router();
 const { login, verifyJWT } = require('../controllers/loginController');
 
-router.get('/', (req, res) => {
-    res.json({ isLoggedIn: true, id: req.user.id})
+router.get('/login', verifyJWT, (req, res) => {
+    res.json({ isLoggedIn: true, user: req.user})
 });
 
-router.post('/', login);
+router.post('/login', login);
 
 module.exports = router;

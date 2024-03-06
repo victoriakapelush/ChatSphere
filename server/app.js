@@ -60,10 +60,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
   app.use(passport.session());
 
 // Define routes
-app.use('/', indexRouter);
+app.use('/', indexRouter, usersRouter);
+app.use('/', loginRouter);
 app.use('/message', messageScreenRouter);
 app.use('/message/users', usersRouter);
-app.use('/login', loginRouter);
 app.use('/logout', logoutRouter);
 
 // catch 404 and forward to error handler

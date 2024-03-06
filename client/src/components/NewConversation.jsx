@@ -17,47 +17,61 @@ function NewConversation() {
     const [allUsers, setAllUsers] = useState([]);
     const [inputValue, setInputValue] = useState(""); // Define inputValue state variable
     const newConversationId = uuidv4();
-    const conversationId = useParams().id; // Get conversation ID from params
+    const conversationId = useParams().id;
     const targetConversation = conversation.find(conversation => conversation._id === conversationId);
 
+
+        // Function to fetch the logged in user
+        useEffect(() => {
+            const fetchCurrentUsers = async () => {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        navigate('/');
+                        return;
+                    }
+                    const tokenWithoutBearer = token.replace('Bearer ', '');
+                    const response = await axios.get('http://localhost:3000/login', {
+                        headers: {
+                            Authorization: `Bearer ${tokenWithoutBearer}`,
+                        },
+                    });
+                    setCurrentUser(response.data.user);
+                } catch (error) {
+                    console.log('Error fetching all users', error);
+                }
+            };
+        
+            fetchCurrentUsers();
+        }, []);
+
+    // Function to fetch all signed up users
     useEffect(() => {
         const fetchAllUsers = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    navigate('/');
-                    return;
-                }
-                const tokenWithoutBearer = token.replace('Bearer ', '');
-                const response = await axios.get('http://localhost:3000', {
-                    headers: {
-                        Authorization: `Bearer ${tokenWithoutBearer}`,
-                    },
-                });
-                const allUsers = response.data.map(user => user.username);
-                
-                // Filter out the currentUser from allUsers
-                const filteredUsers = allUsers.filter(username => username !== currentUser);
-    
-                setAllUsers(filteredUsers);
-                console.log(allUsers);
-            } catch (error) {
-                console.log('Error fetching all users', error);
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+              navigate('/');
+              return;
             }
+            const tokenWithoutBearer = token.replace('Bearer ', '');
+            const response = await axios.get('http://localhost:3000', {
+              headers: {
+                Authorization: `Bearer ${tokenWithoutBearer}`,
+              },
+              params: {
+                loggedInUserId: currentUser.id,
+              },
+            });
+            setAllUsers(response.data);
+          } catch (error) {
+            console.log('Error fetching all users', error);
+          }
         };
-    
         fetchAllUsers();
-    }, []); // Empty dependency array means this effect runs once on mount
+      }, []);
     
 
-    
-    const handleClick = (username) => {
-        setClickedUser(username);
-    };
-    
-    useEffect(() => {
-        console.log(clickedUser);
-    }, [clickedUser]);
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -67,13 +81,13 @@ function NewConversation() {
                     navigate('/');
                     return;
                 }
-                            // Ensure conversationId is properly initialized
+            // Ensure conversationId is properly initialized
             if (!conversationId) {
                 console.error("Conversation ID not found");
                 return;
             }
                 const tokenWithoutBearer = token.replace('Bearer ', '');
-                const response = await axios.get(`http://localhost:3000/users/${conversationId}`, {
+                const response = await axios.get(`http://localhost:3000/message/${conversationId}`, {
                     headers: {
                         Authorization: `Bearer ${tokenWithoutBearer}`,
                     },
@@ -100,15 +114,6 @@ function NewConversation() {
         fetchConversations();
     }, [currentUser, navigate]);
     
-
-    // Function to decode JWT token and set current user
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            const decoded = jwtDecode(token);
-            setCurrentUser(decoded.username); 
-        }
-    }, []);
 
     // Log out
     const handleSubmit = async (e) => {
@@ -144,7 +149,7 @@ const handleSubmitMessage = async (e) => {
         console.error("Error sending message:", error);
     }
 };
-
+const receiverUser = allUsers.find(user => user._id === conversation.receiver);
         
     return (
         <div className="auth-container auth-container-extra">
@@ -153,21 +158,15 @@ const handleSubmitMessage = async (e) => {
                     <Link to="/message"><button className="groupchat-btn">Show conversations</button></Link>
                     <Link to="/message/users"><button className="groupchat-btn">Show all users</button></Link>
                 </div>
-                {conversation && allUsers.map((user, index) => (
-                    <Link key={index} to={`/message/users/${newConversationId}`} onClick={() => handleClick(user)}>
-                        <div className="flex-column user-brief-left">
-                            <h4>{user}</h4>
-                        </div>
-                    </Link>
-                ))}
+
             </div>
             <div className="message-section flex-column">
                 <div className="flex-row username-header">
                     <div className="flex-row user-img-name">
                         <img className="user-icon" src="../src/assets/icons/woman.png" alt="User Icon" />
                         <div className="flex-column">
-                            <h4>{currentUser}</h4>
-                            <h4>Online</h4>
+                        <h4>Who is getting message?</h4>
+                            <h4>Offline</h4>
                         </div>
                     </div>
                     <button onClick={handleSubmit} type="submit" className="login-btn">Log out</button>
