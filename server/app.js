@@ -61,7 +61,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Define routes
 app.use('/', indexRouter, usersRouter);
-app.use('/', loginRouter);
+app.use('/login', loginRouter);
 app.use('/message', messageScreenRouter);
 app.use('/message/users', usersRouter);
 app.use('/logout', logoutRouter);

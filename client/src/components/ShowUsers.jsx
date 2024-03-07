@@ -15,10 +15,7 @@ function ShowUsers() {
     const [conversation, setConversation] = useState([]);
     const [currentConvo, setUsersForCurrentConvo] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
-    const newConversationId = uuidv4();
-    const conversationId = useParams().id;
-    const targetConversation = conversation.find(conversation => conversation._id === conversationId);
-
+    const { id } = useParams();
 
     // Function to fetch the logged in user
     useEffect(() => {
@@ -36,6 +33,7 @@ function ShowUsers() {
                     },
                 });
                 setCurrentUser(response.data.user);
+                console.log(response.data)
             } catch (error) {
                 console.log('Error fetching all users', error);
             }
@@ -63,6 +61,7 @@ function ShowUsers() {
               },
             });
             setAllUsers(response.data);
+            console.log(response.data)
           } catch (error) {
             console.log('Error fetching all users', error);
           }
@@ -89,7 +88,7 @@ function ShowUsers() {
                     <Link to="/message"><button className="groupchat-btn">Show conversations</button></Link>
                 </div>
                 {conversation && allUsers.filter(user => user._id !== currentUser.id).map((user, index) => (
-                    <Link key={index} to={`/message/users/${newConversationId}`}>
+                    <Link key={index} to={`/message/users/${user._id}`}>
                         <div className="flex-column user-brief-left">
                             <h4>{user.username}</h4>
                         </div>
@@ -101,7 +100,7 @@ function ShowUsers() {
                     <div className="flex-row user-img-name">
                         <img className="user-icon" src="../src/assets/icons/woman.png" alt="User Icon" />
                         <div className="flex-column">
-                            <h4>{currentUser.username}</h4>
+                            <h4>{currentUser && currentUser.username}</h4>
                             <h4>Online</h4>
                         </div>
                     </div>

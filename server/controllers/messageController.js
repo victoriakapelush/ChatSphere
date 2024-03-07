@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Message = require("../models/Message");
 const User = require("../models/User");
 const Conversation = require("../models/Conversation");
@@ -52,39 +53,42 @@ const messageGet = (req, res) => {
 
 
 const messagePost = async (req, res) => {
-  const conversationId = uuidv4();
+  const conversationId = new mongoose.Types.ObjectId();
   try {
       const currentUser = await User.findById(req.user.id);
       const { text } = req.body;
       const senderName = req.user.username;
-      const receiverFromBody = req.body.receiver;
       let conversation = await Conversation.findById(req.params.id);
-
+      const receiverFromBody = await Conversation.findOne({
+        participants: req.user.id
+      });
+      const receiverID = receiverFromBody.participants.filter(userId => userId.toString() !== req.user.id);
       if (conversation) {
-          const message = new Message({ receiver: conversation.participants[1], sender: currentUser._id, text, user: senderName, time: new Date() });
+          const message = new Message({ receiver: receiverID, sender: currentUser._id, text, user: senderName, time: new Date() });
           await message.save();
           conversation.messages.push(message);
           await conversation.save();
-          const receiverUser = await User.findById(conversation.participants[1]);
+          const receiverUser = await User.findById(receiverID);
           if (!receiverUser) {
               return res.status(404).json({ message: "Receiver not found" });
           }
-          res.status(201).json({ _id: conversationId, message: "Message created successfully" });
+          res.status(201).json({ message: "Message created successfully" });
       } else {
-
-          const receiverUserFromBody = await User.findOne({ username: receiverFromBody });
+          const receiverUserFromBody = await User.findById(req.params.id);
           if (!receiverUserFromBody) {
               return res.status(404).json({ message: "Receiver not found" });
           }
           conversation = new Conversation({
               _id: conversationId,
-              participants: [req.user.id, receiverUserFromBody._id],
+              participants: [req.user.id, receiverUserFromBody],
               messages: []
           });
-          const message = new Message({ receiver: receiverUserFromBody._id, sender: currentUser._id, text, user: senderName, time: new Date() });
+          const message = new Message({ receiver: receiverUserFromBody, sender: currentUser._id, text, user: senderName, time: new Date() });
           await message.save();
           conversation.messages.push(message);
           await conversation.save();
+          req.user.conversations.push(conversation);
+          await req.user.save();
           res.status(201).json({ _id: conversationId, message: "Message created successfully" });
       }
   } catch (error) {
