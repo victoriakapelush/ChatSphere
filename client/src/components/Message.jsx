@@ -12,7 +12,6 @@ function Message() {
     const [currentUser, setCurrentUser] = useState("");
     const [messageSenders, setMessageSenders] = useState([]);
     const [conversation, setConversation] = useState([]);
-    const [currentConvo, setUsersForCurrentConvo] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
 
         const fetchAllUsers = async () => {
@@ -107,16 +106,7 @@ function Message() {
             <div className="users-list">
                 <div className="groupchat-btns-container flex-row">
                     <Link to="/message/users"><button className="groupchat-btn" onClick={fetchAllUsers}>Show all users</button></Link>
-                    <Link to="/message"><button className="groupchat-btn">Show conversations</button></Link>
                 </div>
-                {messageSenders && conversation.map((conversation, index) => (
-                    <Link key={index} to={`/message/${conversation._id}`}>
-                        <div className="flex-column user-brief-left" onClick={() => handleClick(conversation.participants.username)}>
-                            <h4>From: {messageSenders[index]}</h4>
-                            <p>{conversation.messages[0]?.text}</p> 
-                        </div>
-                    </Link>
-                ))}
             </div>
             <div className="message-section flex-column">
                 <div className="flex-row username-header">

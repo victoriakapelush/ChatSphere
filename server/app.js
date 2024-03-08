@@ -17,6 +17,7 @@ const messageScreenRouter = require('./routes/MessageScreen');
 const loginRouter = require('./routes/login');
 const logoutRouter = require('./routes/logout');
 const usersRouter = require('./routes/users');
+const convoRouter = require('./routes/convo');
 
 var app = express();
 
@@ -63,7 +64,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/', indexRouter, usersRouter);
 app.use('/login', loginRouter);
 app.use('/message', messageScreenRouter);
-app.use('/message/users', usersRouter);
+app.use('/message', usersRouter);
+app.use('/message/users', convoRouter);
 app.use('/logout', logoutRouter);
 
 // catch 404 and forward to error handler

@@ -3,60 +3,26 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode'
+import useCurrentUser from './useCurrentUser.jsx';
+import useAllSignedUsers from './useAllSignedUsers.jsx'
 
 function PersonalPage() {
     const navigate = useNavigate();
-    const [messages, setMessages] = useState([]);
     const [clickedUser, setClickedUser] = useState(null);
     const [currentUserByUsername, setCurrentUserByUsername] = useState("");
-    const [currentUser, setCurrentUser] = useState("");
+    const currentUser = useCurrentUser();
     const [messageSenders, setMessageSenders] = useState([]);
-    const { id } = useParams();
+    const allUsers = useAllSignedUsers();
     const [inputValue, setInputValue] = useState("");
     const [users, setUsers] = useState([]);
     const [conversation, setConversation] = useState([]);
     const conversationId = useParams().id;
     const targetConversation = conversation.find(conversation => conversation._id === conversationId);
 
-// Function to fetch the current user's information
-const fetchUsers = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const response = await axios.get('http://localhost:3000', {
-          headers: {
-            authorization: `Bearer ${token}`
-          }
-        });
-        setUsers(response.data);
-        console.log(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
-  
-  useEffect(() => {
-    setCurrentUserFromToken();
-    fetchUsers();
-  }, []);
-  
-
     const handleClick = (username) => {
         setClickedUser(username);
         console.log(username)
       };
-
-        // Function to decode JWT token and set current user
-        const setCurrentUserFromToken = () => {
-            const token = localStorage.getItem('token');
-            if (token) {
-                const decoded = jwtDecode(token);
-                setCurrentUser(decoded.id); 
-                setCurrentUserByUsername(decoded.username)
-            }
-        };
 
     // Log out
     const handleSubmit = async (e) => {
@@ -87,17 +53,18 @@ const fetchUsers = async () => {
                     },
                 });
                 const allSenders = response.data.map(conversation => {
-                    const messageSender = conversation.participants.find(participant => participant.username !== currentUserByUsername);
+                    const messageSender = conversation.participants.find(participant => participant.username !== currentUser.username);
                     return messageSender ? messageSender.username : '';
                 });
                 setConversation(response.data);
                 setMessageSenders(allSenders);
+                
             } catch (error) {
                 console.error('Error fetching conversations:', error);
             }
         };
         fetchConversations();
-    }, [currentUserByUsername, navigate]);
+    }, [navigate]);
 
     // Function to handle message submission
     const handleSubmitMessage = async (e) => {
@@ -108,33 +75,28 @@ const fetchUsers = async () => {
                 navigate('/');
                 return;
             }
-
-            // Find conversation with the given ID
-            const targetConv = conversation.find(conv => conv._id === conversationId);
+    
+            // Find or create the conversation
+            let targetConv = conversation.find(conv => conv._id === conversationId);
             if (!targetConv) {
+                // If conversation does not exist, create a new one
                 const newConversation = {
                     _id: conversationId,
-                    participants: [receiver, currentUser], 
+                    participants: [currentUser, clickedUser], 
                     messages: [] 
                 };
                 setConversation([...conversation, newConversation]);
+                targetConv = newConversation;
             }
-
-            // Extract receiver ID from the conversation
-            const receiver = targetConv.participants.find(participant => participant !== currentUser);
-            if (!receiver) {
-                console.error('Receiver not found');
-                return;
-            }
-
-            // Send message to the receiver
+    
+            // Send message to the conversation
             const tokenWithoutBearer = token.replace('Bearer ', '');
-            const response = await axios.post(`http://localhost:3000/message/${receiver._id}`, { text: inputValue }, {
+            const response = await axios.post(`http://localhost:3000/message/${conversationId}`, { text: inputValue }, {
                 headers: {
                     Authorization: `Bearer ${tokenWithoutBearer}`,
                 }
             });
-            console.log(receiver)
+    
             const { message } = response.data;
             console.log("Message created:", message);
             setInputValue("");
@@ -143,30 +105,21 @@ const fetchUsers = async () => {
         }
     };
     
+    
     return (
         <div className="auth-container auth-container-extra">
             <div className="users-list">
                 <div className="groupchat-btns-container flex-row">
                     <Link to="/message"><button className="groupchat-btn">Go back</button></Link>
                 </div>
-                {messageSenders && conversation.map((conversation, index) => (
-                    <Link key={index} to={`/message/${conversation._id}`}>
-                        <div className="flex-column user-brief-left" onClick={() => handleClick(conversation.participants.username)}>
-                            <h4>From: {messageSenders[index]}</h4>
-                            <p>{conversation.messages[0]?.text}</p> 
-                        </div>
-                    </Link>
-                ))}
             </div>
             <div className="message-section flex-column">
                 <div className="flex-row username-header">
                     <div className="flex-row user-img-name">
                         <img className="user-icon" src="../src/assets/icons/woman.png"></img>
                         <div className="flex-column">
-                        {messageSenders && messageSenders.map((sender, index) => (
-                            <h4 key={index}>{clickedUser}</h4>
-                        ))}
-                            <p>Offline</p> 
+                            <h4>User</h4>
+                            <h4>Offline</h4>
                         </div>
                     </div>
                     <button onClick={handleSubmit} type="submit" className="login-btn">Log out</button>
@@ -174,14 +127,14 @@ const fetchUsers = async () => {
                 {targetConversation && (
                 <div className="flex-column messages-container">
                     {targetConversation.messages.map((message, index) => (
-                    <div key={index} className={`flex-column message-window ${message.sender === currentUser ? 'sent-by-me' : 'sent-by-other'}`}>
+                    <div key={index} className={`flex-column message-window ${message.sender === currentUser.id ? 'sent-by-me' : 'sent-by-other'}`}>
                         <p className="p-message">{message.text}</p>
                         <p className="p-sent-by">{message.time}</p>
                     </div>
                     ))}
                 </div>
                 )}
-                <form className="send-message-form" onSubmit={handleSubmitMessage}>
+                <form className="send-message-form" onSubmit={handleSubmitMessage} method="POST">
                     <div className="flex-row input-btn-form-container">
                         <input 
                             type="text" 
