@@ -31,9 +31,7 @@ function Message() {
                 
                 // Filter out the currentUser from allUsers
                 const filteredUsers = allUsers.filter(username => username !== currentUser);
-    
                 setAllUsers(filteredUsers);
-                console.log(allUsers);
             } catch (error) {
                 console.log('Error fetching all users', error);
             }

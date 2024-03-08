@@ -220,12 +220,10 @@ footer a {
 .message-section {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   margin: 1rem 0;
   width: 100%;
-  height: 44rem;
+  height: 100%;
   padding-right: 1rem;
-  overflow: scroll;
 }
 
 .auth-container-extra {
@@ -246,7 +244,8 @@ footer a {
   gap: 1rem;
   margin: 1rem 0;
   width: 100%;
-  height: 100%;
+  height: 570px;
+  overflow: scroll;
 }
 
 .p-sent-by {
@@ -254,13 +253,9 @@ footer a {
 }
 
 .send-message-form {
-  justify-content: flex-end;
   margin: 0;
   padding: 0;
-  bottom: 0;
-  left: 0;
   width: 100%;
-  position: sticky;
 }
 
 .input-btn-form-container {

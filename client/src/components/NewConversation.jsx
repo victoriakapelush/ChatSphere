@@ -96,46 +96,48 @@ function NewConversation() {
                 </div>
             </div>
             <div className="message-section flex-column">
-                <div className="flex-row username-header">
-                    <div className="flex-row user-img-name">
-                        <img className="user-icon" src="/src/assets/icons/woman.png" alt="User Icon" />
-                        <div className="flex-column">
-                            {user ? (
-                                <>
-                                    <h4>{user.username}</h4>
-                                    <h4>Offline</h4>
-                                </>
-                                ) : (
-                                    <h4>User not found</h4>
-                            )}    
-                        </div>
-                    </div>
-                    <button onClick={handleSubmit} type="submit" className="login-btn">Log out</button>
-                </div>
-                <div className="flex-column messages-container">
-                {conversation.map((conv, index) => (
-                    <div key={index} className="flex-column messages-container">
-                        {conv.messages.map((message, msgIndex) => (
-                            <div key={msgIndex} className={`flex-column message-window ${message.sender === currentUser.id ? 'sent-by-me' : 'sent-by-other'}`}>
-                                <p className="p-message">{message.text}</p>
-                                <p className="p-sent-by">{message.time}</p>
+                <div>
+                    <div className="flex-row username-header">
+                        <div className="flex-row user-img-name">
+                            <img className="user-icon" src="/src/assets/icons/woman.png" alt="User Icon" />
+                            <div className="flex-column">
+                                {user ? (
+                                    <>
+                                        <h4>{user.username}</h4>
+                                        <h4>Offline</h4>
+                                    </>
+                                    ) : (
+                                        <h4>User not found</h4>
+                                )}    
                             </div>
-                        ))}
+                        </div>
+                        <button onClick={handleSubmit} type="submit" className="login-btn">Log out</button>
                     </div>
-                ))}
-                </div>
-                <form className="send-message-form" onSubmit={handleSubmitMessage} method="POST">
-                    <div className="flex-row input-btn-form-container">
-                        <input 
-                            type="text" 
-                            placeholder="Type your message here..." 
-                            value={inputValue}
-                            onChange={e => setInputValue(e.target.value)}
-                            required
-                            />
-                        <button type="submit">Send</button>
+                    <div className="flex-column messages-container">
+                    {conversation.map((conv, index) => (
+                        <div key={index} className="flex-column messages-container">
+                            {conv.messages.map((message, msgIndex) => (
+                                <div key={msgIndex} className={`flex-column message-window ${message.sender === currentUser.id ? 'sent-by-me' : 'sent-by-other'}`}>
+                                    <p className="p-message">{message.text}</p>
+                                    <p className="p-sent-by">{message.time}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ))}
                     </div>
-                </form>
+                    </div>
+                    <form className="send-message-form" onSubmit={handleSubmitMessage} method="POST">
+                        <div className="flex-row input-btn-form-container">
+                            <input 
+                                type="text" 
+                                placeholder="Type your message here..." 
+                                value={inputValue}
+                                onChange={e => setInputValue(e.target.value)}
+                                required
+                                />
+                            <button type="submit">Send</button>
+                        </div>
+                    </form>
                 </div>
             </div>
     )
