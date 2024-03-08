@@ -260,7 +260,7 @@ footer a {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: auto;
+  position: sticky;
 }
 
 .input-btn-form-container {
@@ -296,15 +296,15 @@ footer a {
 
 .sent-by-me {
   align-self: flex-end;
-  background-color: #DCF8C6; /* Background color for messages sent by the logged-in user */
+  background-color: #DCF8C6; 
   border-radius: 10px;
   padding: 8px 12px;
   margin: 4px;
 }
 
 .sent-by-other {
-  align-self: flex-start; /* Align messages to the left */
-  background-color: #EAEAEA; /* Background color for messages sent by other users */
+  align-self: flex-start; 
+  background-color: #EAEAEA; 
   border-radius: 10px;
   padding: 8px 12px;
   margin: 4px;

@@ -12,7 +12,6 @@ function NewConversation() {
     const [clickedUser, setClickedUser] = useState(null);
     const currentUser = useCurrentUser();
     const allUsers = useAllSignedUsers();
-    const [currentUserByUsername, setCurrentUserByUsername] = useState("");
     
     const [conversation, setConversation] = useState([]);
     const [inputValue, setInputValue] = useState(""); 
@@ -20,6 +19,30 @@ function NewConversation() {
 
     // Display name of a message receiver on top of the page
     const user = allUsers.find(user => user._id === conversationId);
+
+    // Function to handle message submission
+    const handleSubmitMessage = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                navigate('/');
+                return;
+            }
+            // Send message to the receiver
+            const tokenWithoutBearer = token.replace('Bearer ', '');
+            const response = await axios.post(`http://localhost:3000/message/users/${conversationId}`, { receiver: clickedUser, text: inputValue }, {
+                headers: {
+                    Authorization: `Bearer ${tokenWithoutBearer}`,
+                }
+            });
+            const { message } = response.data;
+            console.log("Message created:", message);
+            setInputValue("");
+        } catch (error) {
+            console.error("Error sending message:", error);
+        }
+    };
 
       // Fetch comversation between users
       useEffect(() => {
@@ -42,8 +65,6 @@ function NewConversation() {
                     )
                 );
                 setConversation(filteredConversations);
-                console.log(filteredConversations)
-                
             } catch (error) {
                 console.error('Error fetching conversations:', error);
             }
@@ -66,31 +87,6 @@ function NewConversation() {
             console.error('Logout error:', error);
         }
     };
-
-// Function to handle message submission
-    const handleSubmitMessage = async (e) => {
-        e.preventDefault();
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/');
-                return;
-            }
-            // Send message to the receiver
-            const tokenWithoutBearer = token.replace('Bearer ', '');
-            const response = await axios.post(`http://localhost:3000/message/users/${conversationId}`, { receiver: clickedUser, text: inputValue }, {
-                headers: {
-                    Authorization: `Bearer ${tokenWithoutBearer}`,
-                }
-            });
-            const { _id, message } = response.data;
-            console.log("Message created:", message);
-            setInputValue("");
-        } catch (error) {
-            console.error("Error sending message:", error);
-        }
-    };
-
         
     return (
         <div className="auth-container auth-container-extra">
@@ -134,7 +130,7 @@ function NewConversation() {
                             type="text" 
                             placeholder="Type your message here..." 
                             value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
+                            onChange={e => setInputValue(e.target.value)}
                             required
                             />
                         <button type="submit">Send</button>
