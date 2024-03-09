@@ -7,6 +7,7 @@ import axios from "axios";
 import useCurrentUser from './useCurrentUser.jsx';
 import useAllSignedUsers from './useAllSignedUsers.jsx'
 import logoutUser from './logoutUser';
+import EmojiPicker from 'emoji-picker-react';
 
 function NewConversation() {
     const navigate = useNavigate();
@@ -15,6 +16,15 @@ function NewConversation() {
     const [conversation, setConversation] = useState([]);
     const [inputValue, setInputValue] = useState(""); 
     const conversationId = useParams().id;
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+    const handleEmojiSelect = (emojiObject) => {
+        setInputValue(prevValue => prevValue + emojiObject.emoji);
+    };
+
+    const toggleEmojiPicker = () => {
+        setShowEmojiPicker(!showEmojiPicker);
+    };
 
     // Display name of a message receiver on top of the page
     const user = allUsers.find(user => user._id === conversationId);
@@ -131,6 +141,7 @@ useEffect(() => {
                         </div>
                         <button onClick={handleLogout} type="submit" className="login-btn">Log out</button>
                     </div>
+                    {showEmojiPicker && <EmojiPicker onEmojiClick={handleEmojiSelect} />}
                     <div className="flex-column messages-container">
                     {conversation.map((conv, index) => (
                         <div key={index} className="flex-column messages-container">
@@ -153,6 +164,7 @@ useEffect(() => {
                                 onChange={e => setInputValue(e.target.value)}
                                 required
                                 />
+                            <button type="button" onClick={toggleEmojiPicker}>😊</button>
                             <button type="submit">Send</button>
                         </div>
                     </form>

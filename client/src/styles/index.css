@@ -304,3 +304,7 @@ footer a {
   padding: 8px 12px;
   margin: 4px;
 }
+
+.epr-main {
+  position: absolute !important;
+}
