@@ -39,7 +39,7 @@ const handleSubmitMessage = async (e) => {
             return;
         }
         const tokenWithoutBearer = token.replace('Bearer ', '');
-        const response = await axios.post(`http://localhost:3000/message/users/${conversationId}`, { text: inputValue }, {
+        const response = await axios.post(`https://chatsphere-zqoh.onrender.com/message/users/${conversationId}`, { text: inputValue }, {
             headers: {
                 Authorization: `Bearer ${tokenWithoutBearer}`
             }
@@ -94,7 +94,7 @@ const handleSubmitMessage = async (e) => {
             return;
         }
         const tokenWithoutBearer = token.replace('Bearer ', '');
-        const response = await axios.get(`http://localhost:3000/message/users/${conversationId}`, {
+        const response = await axios.get(`https://chatsphere-zqoh.onrender.com/message/users/${conversationId}`, {
             headers: {
                 Authorization: `Bearer ${tokenWithoutBearer}`
             },

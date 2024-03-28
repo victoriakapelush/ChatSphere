@@ -7,7 +7,7 @@ import toast, { Toaster } from 'react-hot-toast';
 
 function Auth() {
     const notifySuccess = () => toast.success('Registered successfully!');
-    const notifyError = () => toast.error('Something went wrong... Please try again');
+    const notifyError = () => toast.error('Something went wrong. Please try again');
     const navigate = useNavigate();
     const [inputValue, setInputValue] = useState({
       password: "",
@@ -27,7 +27,7 @@ function Auth() {
         e.preventDefault();
         try {
           const { data } = await axios.post(
-            "http://localhost:3000",
+            "https://chatsphere-zqoh.onrender.com",
             {
               ...inputValue,
             },

@@ -25,7 +25,7 @@ const mongoDB = process.env.mongoDB;
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173', 
+  origin: 'https://chatsphere-3sxt.onrender.com', 
   credentials: true
 }));
 

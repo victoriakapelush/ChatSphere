@@ -6,7 +6,7 @@ import toast, { Toaster } from 'react-hot-toast';
 
 function Login() {
   const notifySuccess = () => toast.success('Logged in successfully!');
-  const notifyError = () => toast.error('Something went wrong... Please try again');
+  const notifyError = () => toast.error('Something went wrong. Please try again');
   const navigate = useNavigate();
   const [credentials, setCredentials] = useState({ username: '', password: '' });
 
@@ -17,7 +17,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:3000/login", credentials);
+      const response = await axios.post("https://chatsphere-zqoh.onrender.com/login", credentials);
       const { token } = response.data;
       localStorage.setItem('token', token);
       navigate('/message');

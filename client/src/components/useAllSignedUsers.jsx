@@ -18,7 +18,7 @@ const useAllSignedUsers = () => {
               return;
             }
             const tokenWithoutBearer = token.replace('Bearer ', '');
-            const response = await axios.get('http://localhost:3000', {
+            const response = await axios.get('https://chatsphere-zqoh.onrender.com', {
               headers: {
                 Authorization: `Bearer ${tokenWithoutBearer}`,
               },
