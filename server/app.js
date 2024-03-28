@@ -1,11 +1,9 @@
-require('dotenv').config();
 const createError = require('http-errors');
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const passport = require('passport');
 const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
@@ -23,6 +21,7 @@ const convoRouter = require('./routes/convo');
 const mongoDB = process.env.mongoDB;
 
 const app = express();
+app.use(cors());
 
 app.use(cors({
   origin: 'https://chatsphere-3sxt.onrender.com', 
