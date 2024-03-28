@@ -10,6 +10,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
+require("dotenv").config();
 
 // Import routes
 const indexRouter = require('./routes/index');
@@ -26,13 +27,16 @@ app.use(cors({
   credentials: true
 }));
 
-const mongoDB = "mongodb+srv://victoriakapelush:sakuraSun123@cluster0.qpt6ako.mongodb.net/ChatSphere?retryWrites=true&w=majority";
 mongoose.set('strictQuery', false);
 
 // Connect to MongoDB
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log('Connected to MongoDB');
+    const PORT = process.env.PORT || 8000
+    app.listen(PORT, () => {
+        console.log(`App is Listening on PORT ${PORT}`);
+    })
   })
   .catch(error => {
     console.error('Error connecting to MongoDB:', error);
