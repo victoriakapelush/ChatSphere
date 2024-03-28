@@ -22,12 +22,12 @@ const mongoDB = process.env.mongoDB;
 
 const app = express();
 
-app.use(cors());
+//app.use(cors());
 
-/*app.use(cors({
+app.use(cors({
   origin: 'https://chatsphere-3sxt.onrender.com', 
   credentials: true
-}));*/
+}));
 
 mongoose.set('strictQuery', false);
 
