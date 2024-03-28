@@ -1,16 +1,11 @@
-const mongoose = require("mongoose");
-const Message = require("../models/Message");
-const User = require("../models/User");
 const Conversation = require("../models/Conversation");
 
 const convoGet = async (req, res) => {
     const currentUser = req.user.id;
-    const receiverId = req.params.id; // Assuming you pass receiverId in the request params
-
-    console.log('Receiver ID:', receiverId); // Add this console log
-
+    const receiverId = req.params.id; 
+    
     Conversation.find({ 
-        participants: { $all: [currentUser, receiverId] } // Find conversations where both participants are currentUser and receiverId
+        participants: { $all: [currentUser, receiverId] } 
     })
     .populate('participants') 
     .populate('messages')
@@ -22,6 +17,7 @@ const convoGet = async (req, res) => {
             const receiver = conversation.participants.find(participant => participant._id.toString() !== currentUser);
             const formattedMessages = conversation.messages.map(message => ({
                 text: message.text,
+                image: message.image,
                 time: getRelativeTime(new Date(message.time)),
                 sender: message.sender,
                 receiver: message.receiver

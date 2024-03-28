@@ -39,16 +39,14 @@ const handleSubmitMessage = async (e) => {
             return;
         }
         const tokenWithoutBearer = token.replace('Bearer ', '');
-        const response = await axios.post(`http://localhost:3000/message/users/${conversationId}`, { receiver: conversationId, text: inputValue }, {
+        const response = await axios.post(`http://localhost:3000/message/users/${conversationId}`, { text: inputValue }, {
             headers: {
-                Authorization: `Bearer ${tokenWithoutBearer}`,
+                Authorization: `Bearer ${tokenWithoutBearer}`
             }
         });
         const { message } = response.data;
         setConversation(prevConversation => {
-            // Filter conversations to find those involving the current user and the other user (conversationId)
             const filteredConversations = prevConversation.filter(conv => {
-                // Check if the conversation involves the current user and the other user
                 const includesCurrentUser = conv.participants.some(participant =>
                     participant._id === currentUser.id
                 );
@@ -98,7 +96,7 @@ const handleSubmitMessage = async (e) => {
         const tokenWithoutBearer = token.replace('Bearer ', '');
         const response = await axios.get(`http://localhost:3000/message/users/${conversationId}`, {
             headers: {
-                Authorization: `Bearer ${tokenWithoutBearer}`,
+                Authorization: `Bearer ${tokenWithoutBearer}`
             },
         });
         setConversation(response.data);
@@ -127,7 +125,7 @@ useEffect(() => {
                 <div>
                     <div className="flex-row username-header">
                         <div className="flex-row user-img-name">
-                            <img className="user-icon" src="/src/assets/icons/woman.png" alt="User Icon" />
+                            <img className="user-icon" src="/src/assets/icons/man.png" alt="User Icon" />
                             <div className="flex-column">
                                 {user ? (
                                     <>
@@ -149,6 +147,8 @@ useEffect(() => {
                                 <div key={msgIndex} className={`flex-column message-window ${message.sender === currentUser.id ? 'sent-by-me' : 'sent-by-other'}`}>
                                     <p className="p-message">{message.text}</p>
                                     <p className="p-sent-by">{message.time}</p>
+                                    {message.image && <img className="message-image" src={message.image} alt="Sent Image" />}
+                                    <p>{message.image}</p>
                                 </div>
                             ))}
                         </div>
@@ -162,8 +162,7 @@ useEffect(() => {
                                 placeholder="Type your message here..." 
                                 value={inputValue}
                                 onChange={e => setInputValue(e.target.value)}
-                                required
-                                />
+                            />
                             <button type="button" onClick={toggleEmojiPicker}>😊</button>
                             <button type="submit">Send</button>
                         </div>

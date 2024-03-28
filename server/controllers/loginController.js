@@ -33,22 +33,23 @@ function verifyJWT(req, res, next) {
   const token = req.headers["authorization"]?.split(' ')[1];
   if (token) {
     jwt.verify(token, 'cats', (err, decoded) => {
-      if(err) {
+      if (err) {
         console.error('Token verification error:', err);
-        return res.json({
+        return res.status(401).json({
           isLoggedIn: false,
           message: "Failed to Authenticate"
         });
       }
       req.user = {
         id: decoded.id,
-        username: decoded.username 
+        username: decoded.username
       };
       next();
     });
   } else {
-    res.json({ message: "Incorrect Token Given", isLoggedIn: false });
+    res.status(401).json({ message: "Authorization token is missing", isLoggedIn: false });
   }
 }
+
 
 module.exports = { login, verifyJWT };

@@ -1,9 +1,6 @@
-const mongoose = require("mongoose");
 const Message = require("../models/Message");
 const User = require("../models/User");
 const Conversation = require("../models/Conversation");
-const { DateTime } = require("luxon");
-const { v4: uuidv4 } = require('uuid');
 
 function getRelativeTime(date) {
     const now = Date.now();
@@ -26,12 +23,10 @@ function getRelativeTime(date) {
 
 const messageGet = (req, res) => {
   const currentUser = req.user.id;
-  const receiverId = req.params.id; // Assuming you pass receiverId in the request params
-
-  console.log('Receiver ID:', receiverId); // Add this console log
+  const receiverId = req.params.id; 
 
   Conversation.find({ 
-      participants: { $all: [currentUser, receiverId] } // Find conversations where both participants are currentUser and receiverId
+      participants: { $all: [currentUser, receiverId] } 
   })
   .populate('participants') 
   .populate('messages')
@@ -43,6 +38,7 @@ const messageGet = (req, res) => {
           const receiver = conversation.participants.find(participant => participant._id.toString() !== currentUser);
           const formattedMessages = conversation.messages.map(message => ({
               text: message.text,
+              image: message.image,
               time: getRelativeTime(new Date(message.time)),
               sender: message.sender,
               receiver: message.receiver
@@ -54,7 +50,6 @@ const messageGet = (req, res) => {
               messages: formattedMessages
           };
       });
-      console.log(receiverId); 
       res.json(formattedConversations);
   })
   .catch(err => {
@@ -63,52 +58,50 @@ const messageGet = (req, res) => {
   });
 };
 
-
-
 const messagePost = async (req, res) => {
   try {
     const currentUser = await User.findById(req.user.id);
     const { text } = req.body;
     const senderName = req.user.username;
-
     const receiverUser = await User.findById(req.params.id);
-    if (!receiverUser) {
+
+      if (!receiverUser) {
       return res.status(404).json({ message: "Receiver not found" });
     }
 
-    // Find or create conversation between the two users
-    let conversation = await Conversation.findOne({
-      participants: { $all: [req.user.id, req.params.id] }
-    });
-
-    if (!conversation) {
-      conversation = new Conversation({
-        participants: [req.user.id, req.params.id],
-        messages: []
+      // Find or create conversation between the two users
+      let conversation = await Conversation.findOne({
+        participants: { $all: [req.user.id, req.params.id] }
       });
-    }
 
-    const message = new Message({
-      receiver: receiverUser._id,
-      sender: currentUser._id,
-      text,
-      user: senderName,
-      time: new Date()
-    });
+      if (!conversation) {
+        conversation = new Conversation({
+          participants: [req.user.id, req.params.id],
+          messages: []
+        });
+      }
 
-    await message.save();
-    conversation.messages.push(message);
-    await conversation.save();
+      const message = new Message({
+        receiver: receiverUser._id,
+        sender: currentUser._id,
+        text,
+        user: senderName,
+        time: new Date()
+      });
 
-    // Update sender user's conversations
-    currentUser.conversations.push(conversation);
-    await currentUser.save();
+      await message.save();
+      conversation.messages.push(message);
+      await conversation.save();
 
-    // Update receiver user's conversations
-    receiverUser.conversations.push(conversation);
-    await receiverUser.save();
+      // Update sender user's conversations
+      currentUser.conversations.push(conversation);
+      await currentUser.save();
 
-    res.status(201).json({ message: "Message created successfully" });
+      // Update receiver user's conversations
+      receiverUser.conversations.push(conversation);
+      await receiverUser.save();
+
+      res.status(201).json({ message: "Message created successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
