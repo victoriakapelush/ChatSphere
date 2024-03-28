@@ -20,7 +20,9 @@ const logoutRouter = require('./routes/logout');
 const usersRouter = require('./routes/users');
 const convoRouter = require('./routes/convo');
 
-var app = express();
+const mongoDB = process.env.mongoDB;
+
+const app = express();
 
 app.use(cors({
   origin: 'http://localhost:5173', 
@@ -90,10 +92,5 @@ app.use(function(err, req, res, next) {
     error: err
   });
 });
-
-/*const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});*/
 
 module.exports = app;
