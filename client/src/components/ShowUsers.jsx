@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import useCurrentUser from './useCurrentUser.jsx';
 import useAllSignedUsers from './useAllSignedUsers.jsx';
 import logoutUser from './logoutUser';
+import icon from '../assets/icons/user.png';
 
 function ShowUsers() {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ function ShowUsers() {
             <div className="message-section flex-column">
                 <div className="flex-row username-header">
                     <div className="flex-row user-img-name">
-                        <img className="user-icon" src="../src/assets/icons/woman.png" alt="User Icon" />
+                        <img className="user-icon" src={icon} alt="User Icon" />
                         <div className="flex-column">
                             <h4>{currentUser && currentUser.username}</h4>
                             <h4>Online</h4>

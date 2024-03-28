@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import axios from "axios";
 import logoutUser from './logoutUser';
 import useCurrentUser from './useCurrentUser.jsx';
+import icon from '../assets/icons/user.png';
 
 function Message() {
     const navigate = useNavigate();
@@ -50,7 +51,7 @@ function Message() {
             <div className="message-section flex-column">
                 <div className="flex-row username-header">
                     <div className="flex-row user-img-name">
-                        <img className="user-icon" src="../src/assets/icons/woman.png" alt="User Icon" />
+                        <img className="user-icon" src={icon} alt="User Icon" />
                         <div className="flex-column">
                             <h4>{currentUser.username}</h4>
                             <h4>Online</h4>

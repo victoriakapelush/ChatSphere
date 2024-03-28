@@ -8,6 +8,7 @@ import useCurrentUser from './useCurrentUser.jsx';
 import useAllSignedUsers from './useAllSignedUsers.jsx'
 import logoutUser from './logoutUser';
 import EmojiPicker from 'emoji-picker-react';
+import icon from '../assets/icons/user.png';
 
 function NewConversation() {
     const navigate = useNavigate();
@@ -125,7 +126,7 @@ useEffect(() => {
                 <div>
                     <div className="flex-row username-header">
                         <div className="flex-row user-img-name">
-                            <img className="user-icon" src="/src/assets/icons/man.png" alt="User Icon" />
+                            <img className="user-icon" src={icon} alt="User Icon" />
                             <div className="flex-column">
                                 {user ? (
                                     <>
